@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080b10">
+<title>Zalupa</title>
+
+<style>
+:root{
+  --bg:#080b10;
+  --panel:#101720;
+  --panel2:#151f2b;
+  --border:#263545;
+  --green:#76b900;
+  --text:#edf3f8;
+  --muted:#92a1b1;
+  --red:#ff536d;
+  --yellow:#ffbd4a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);
+font-family:system-ui,-apple-system,Roboto,Arial,sans-serif}
+body{padding-bottom:15px}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;touch-action:manipulation}
+button:disabled{opacity:.45;cursor:not-allowed}
+.app{max-width:950px;margin:auto;padding:12px}
+header{display:flex;align-items:center;gap:12px;padding:14px 4px 18px}
+.logo{width:48px;height:48px;display:grid;place-items:center;border-radius:14px;
+background:#18250b;border:1px solid #45651a;color:var(--green);font-size:25px;font-weight:900}
+.brand{font-size:21px;font-weight:900;letter-spacing:.3px}
+.subtitle{font-size:12px;color:var(--muted);margin-top:3px}
+.badge{margin-left:auto;padding:6px 9px;border-radius:9px;border:1px solid var(--border);
+font-size:11px;color:var(--green);white-space:nowrap}
+.tabs{display:flex;gap:7px;margin-bottom:13px}
+.tab{flex:1;background:var(--panel);color:var(--muted);border:1px solid var(--border);
+border-radius:11px;padding:11px 5px;font-weight:750}
+.tab.active{background:#1a280e;color:var(--green);border-color:#52751d}
+.page{display:none}
+.page.active{display:block}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:15px;
+padding:14px;margin-bottom:12px}
+.panel-title{font-weight:850;font-size:15px;margin-bottom:12px}
+.label{display:block;font-size:12px;color:var(--muted);margin:11px 0 6px}
+.input,select,textarea{width:100%;background:#090f16;color:var(--text);
+border:1px solid var(--border);border-radius:10px;padding:12px;outline:none}
+.input:focus,select:focus,textarea:focus{border-color:var(--green)}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{min-width:0;flex:1}
+.btn{border:1px solid var(--border);border-radius:10px;padding:11px 13px;
+background:var(--panel2);color:var(--text);font-weight:750}
+.btn-green{background:var(--green);color:#101609;border-color:var(--green)}
+.btn-red{color:var(--red);border-color:#66303a}
+.btn-small{padding:8px 10px;font-size:12px}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:8px}
+.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.dot{width:8px;height:8px;background:#64717e;border-radius:50%;flex-shrink:0}
+.dot.ok{background:var(--green)}
+.dot.bad{background:var(--red)}
+.dot.wait{background:var(--yellow)}
+#modelCount{color:var(--green);font-size:12px}
+.chatbox{height:45vh;min-height:260px;max-height:520px;overflow-y:auto;
+background:#080d13;border:1px solid var(--border);border-radius:12px;padding:10px;
+display:flex;flex-direction:column;gap:10px}
+.message{max-width:95%;padding:11px 12px;border-radius:12px;
+font-size:14px;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}
+.message.user{align-self:flex-end;background:#263a15;border:1px solid #3d5a20}
+.message.assistant{align-self:flex-start;background:#141f2b;border:1px solid #263545}
+.message.system{align-self:center;color:var(--muted);font-size:12px;text-align:center}
+.message .who{font-size:10px;color:var(--green);font-weight:900;margin-bottom:5px}
+.composer{display:flex;gap:8px;margin-top:10px;align-items:flex-end}
+.composer textarea{resize:vertical;min-height:48px;max-height:140px}
+.composer button{min-height:48px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:11px}
+.stat-value{font-size:19px;font-weight:900;color:var(--green)}
+.stat-label{font-size:10px;color:var(--muted);margin-top:3px}
+.log{background:#05090d;border:1px solid var(--border);border-radius:10px;
+padding:10px;max-height:320px;overflow:auto;font:11px/1.55 monospace;
+white-space:pre-wrap;overflow-wrap:anywhere;color:#b7c6d3}
+.logline{margin-bottom:5px;border-bottom:1px solid #15202a;padding-bottom:4px}
+.error-text{color:var(--red)}
+.success-text{color:var(--green)}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--muted);font-size:13px;padding:5px 0}
+.footer{text-align:center;color:#596979;font-size:11px;padding:12px}
+.checkline{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:10px}
+.checkline input{accent-color:var(--green)}
+@media(min-width:650px){
+ .app{padding:22px}
+ .chatbox{height:50vh}
+ .settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">N</div>
+  <div>
+    <div class="brand">NVIDIA AI LAB</div>
+    <div class="subtitle">AI CHAT · MODEL EXPLORER · DIAGNOSTICS</div>
+  </div>
+  <div class="badge">VERSION 3.1</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-page="chatPage">💬 Чат</button>
+  <button class="tab" data-page="modelsPage">🧠 Модели</button>
+  <button class="tab" data-page="diagPage">🔧 Диагностика</button>
+</div>
+
+<!-- CHAT -->
+<section class="page active" id="chatPage">
+
+  <div class="panel">
+    <div class="panel-title">🔐 Подключение к NVIDIA</div>
+
+    <label class="label" for="apiKey">API Key</label>
+    <input class="input" id="apiKey" type="password"
+      placeholder="nvapi-..." autocomplete="off" spellcheck="false">
+
+    <div class="row" style="margin-top:9px">
+      <button class="btn btn-green" id="testBtn">Проверить API</button>
+      <button class="btn" id="loadModelsBtn">Загрузить модели</button>
+    </div>
+
+    <label class="label">Статус</label>
+    <div class="status">
+      <span class="dot" id="statusDot"></span>
+      <span id="statusText">Ожидание подключения</span>
+    </div>
+
+    <div class="note">
+      Ключ используется только для запросов из этого приложения.
+      Не отправляй его другим людям и не вставляй в публичный HTML.
+      Ключ не сохраняется в localStorage.
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">🤖 Настройки модели</div>
+
+    <label class="label" for="modelSelect">Выбери модель</label>
+    <select id="modelSelect">
+      <option value="">Сначала загрузи список моделей</option>
+    </select>
+
+    <div class="row" style="margin-top:8px">
+      <button class="btn btn-small" id="refreshModelsBtn">↻ Обновить список</button>
+      <span id="modelCount">Модели не загружены</span>
+    </div>
+
+    <details>
+      <summary>⚙️ Параметры генерации</summary>
+
+      <label class="label" for="temperature">Temperature: <span id="tempValue">0.7</span></label>
+      <input id="temperature" type="range" min="0" max="2" step="0.1" value="0.7"
+        style="width:100%;accent-color:var(--green)">
+
+      <label class="label" for="maxTokens">Максимум токенов</label>
+      <select id="maxTokens">
+        <option value="512">512</option>
+        <option value="1024" selected>1024</option>
+        <option value="2048">2048</option>
+        <option value="4096">4096</option>
+      </select>
+
+      <label class="checkline">
+        <input type="checkbox" id="streamMode">
+        Потоковый ответ (если поддерживается моделью)
+      </label>
+    </details>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" id="msgCount">0</div>
+      <div class="stat-label">СООБЩЕНИЙ</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="modelStat">0</div>
+      <div class="stat-label">МОДЕЛЕЙ</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" id="reqCount">0</div>
+      <div class="stat-label">ЗАПРОСОВ</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row" style="margin-bottom:10px">
+      <div class="panel-title" style="margin:0">💬 Диалог</div>
+      <button class="btn btn-small" id="exportBtn">Экспорт</button>
+      <button class="btn btn-small btn-red" id="clearBtn">Очистить</button>
+    </div>
+
+    <div class="chatbox" id="chatbox">
+      <div class="message system">
+        NVIDIA AI LAB готова к работе. Введи API-ключ, загрузи модели и отправь сообщение.
+      </div>
+    </div>
+
+    <div class="composer">
+      <textarea id="messageInput" placeholder="Напиши сообщение..." rows="2"></textarea>
+      <button class="btn btn-green" id="sendBtn">➤</button>
+    </div>
+    <div class="note">Enter — отправить · Shift + Enter — новая строка</div>
+  </div>
+</section>
+
+<!-- MODELS -->
+<section class="page" id="modelsPage">
+  <div class="panel">
+    <div class="panel-title">🧠 Каталог моделей</div>
+    <div class="note">
+      Каталог загружается с NVIDIA API. Доступность модели зависит от твоего API-ключа,
+      лимитов аккаунта и текущей доступности сервиса.
+    </div>
+
+    <label class="label" for="modelSearch">Поиск по моделям</label>
+    <input class="input" id="modelSearch" placeholder="Например, llama, qwen, deepseek...">
+
+    <div class="row" style="margin-top:10px">
+      <button class="btn btn-green" id="catalogLoadBtn">Загрузить каталог</button>
+      <button class="btn" id="clearSearchBtn">Сбросить поиск</button>
+    </div>
+
+    <div id="modelList" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<!-- DIAGNOSTICS -->
+<section class="page" id="diagPage">
+  <div class="panel">
+    <div class="panel-title">🔧 Диагностика соединения</div>
+
+    <div class="status">
+      <span class="dot" id="netDot"></span>
+      <span id="netStatus">Проверяем состояние сети...</span>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <button class="btn btn-green" id="diagBtn">Запустить диагностику</button>
+      <button class="btn" id="copyLogBtn">Копировать лог</button>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="clearLogBtn">Очистить лог</button>
+      <button class="btn" id="exportLogBtn">Скачать лог</button>
+    </div>
+
+    <label class="label">Журнал событий</label>
+    <div class="log" id="logBox">Журнал пуст.</div>
+
+    <div class="note">
+      Если GET /models работает, а POST /chat/completions выдаёт сетевую ошибку,
+      возможны проблемы с CORS/preflight в WebView, VPN, фильтрацией соединений
+      или самим запросом. Журнал помогает отличить сетевую ошибку от HTTP-ошибки.
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">📱 Информация об устройстве</div>
+    <div class="log" id="deviceInfo"></div>
+  </div>
+</section>
+
+<div class="footer">NVIDIA AI LAB 3.1 · Mobile AI Interface</div>
+</div>
+
+<script>
+"use strict";
+
+/* ======================================================
+   NVIDIA AI LAB 3.1
+   ====================================================== */
+
+const API_BASE = "https://integrate.api.nvidia.com/v1";
+const $ = id => document.getElementById(id);
+
+let models = [];
+let messages = [];
+let requestCount = 0;
+let busy = false;
+let abortController = null;
+
+function now() {
+  return new Date().toLocaleTimeString("ru-RU");
+}
+
+function log(text, type="info") {
+  const box = $("logBox");
+
+  if (box.textContent === "Журнал пуст.") box.textContent = "";
+
+  const line = document.createElement("div");
+  line.className = "logline";
+
+  const stamp = document.createElement("span");
+  stamp.textContent = "[" + now() + "] ";
+
+  const content = document.createElement("span");
+  content.textContent = String(text);
+
+  if (type === "error") content.className = "error-text";
+  if (type === "success") content.className = "success-text";
+
+  line.append(stamp, content);
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+
+  console.log("[NVIDIA AI LAB]", text);
+}
+
+function setStatus(text, type="") {
+  $("statusText").textContent = text;
+  $("statusDot").className = "dot" + (type ? " " + type : "");
+}
+
+function setNetworkStatus() {
+  const online = navigator.onLine;
+
+  $("netStatus").textContent = online
+    ? "Браузер сообщает, что интернет доступен"
+    : "Браузер сообщает, что интернет отсутствует";
+
+  $("netDot").className = "dot " + (online ? "ok" : "bad");
+}
+
+function updateStats() {
+  $("msgCount").textContent = messages.length;
+  $("modelStat").textContent = models.length;
+  $("reqCount").textContent = requestCount;
+}
+
+function getKey() {
+  return $("apiKey").value.trim();
+}
+
+function validateKey() {
+  const key = getKey();
+
+  if (!key) {
+    throw new Error("Введи свой NVIDIA API Key.");
+  }
+
+  if (/\s/.test(key)) {
+    throw new Error("В API-ключе обнаружены пробелы или переносы строк.");
+  }
+
+  return key;
+}
+
+function addMessage(role, content) {
+  const item = {role, content: String(content)};
+  messages.push(item);
+
+  const box = $("chatbox");
+  const empty = box.querySelector(".message.system");
+
+  if (empty && messages.length === 1) empty.remove();
+
+  const el = document.createElement("div");
+  el.className = "message " + role;
+
+  const who = document.createElement("div");
+  who.className = "who";
+  who.textContent = role === "user" ? "ТЫ" : "NVIDIA AI";
+
+  const body = document.createElement("div");
+  body.textContent = item.content;
+
+  el.append(who, body);
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+
+  updateStats();
+  return {el, body};
+}
+
+function showSystem(text) {
+  const el = document.createElement("div");
+  el.className = "message system";
+  el.textContent = text;
+  $("chatbox").appendChild(el);
+  $("chatbox").scrollTop = $("chatbox").scrollHeight;
+}
+
+function clearChat() {
+  if (!confirm("Удалить всю текущую переписку?")) return;
+
+  messages = [];
+  $("chatbox").replaceChildren();
+  showSystem("Переписка очищена.");
+  updateStats();
+  log("Переписка очищена.");
+}
+
+function errorDetails(error, path, method) {
+  return {
+    name: error && error.name ? error.name : "UnknownError",
+    message: error && error.message ? error.message : String(error),
+    endpoint: API_BASE + path,
+    method: method,
+    online: navigator.onLine,
+    userAgent: navigator.userAgent,
+    time: new Date().toISOString(),
+    note:
+      "Fetch не предоставил HTTP Response. Это не доказывает CORS: " +
+      "причиной также могут быть WebView, VPN, DNS, фильтрация сети " +
+      "или прерывание соединения."
+  };
+}
+
+/*
+  Важная часть диагностики:
+  - HTTP 401/403/404/429 и другие статусы показываются отдельно.
+  - Сетевая ошибка без Response регистрируется с деталями.
+  - Тайм-аут ограничен 45 секундами.
+*/
+async function request(path, method="GET", body=null) {
+  const key = validateKey();
+  const controller = new AbortController();
+  abortController = controller;
+
+  const timeout = setTimeout(() => controller.abort(), 45000);
+
+  const headers = {
+    "Authorization": "Bearer " + key,
+    "Accept": "application/json"
+  };
+
+  const options = {
+    method,
+    headers,
+    signal: controller.signal,
+    cache: "no-store"
+  };
+
+  if (body !== null) {
+    headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(body);
+  }
+
+  log(method + " " + path);
+
+  try {
+    const response = await fetch(API_BASE + path, options);
+    const raw = await response.text();
+
+    log("HTTP " + response.status + " " + response.statusText,
+      response.ok ? "success" : "error");
+
+    let data = null;
+
+    try {
+      data = raw ? JSON.parse(raw) : {};
+    } catch (_) {
+      data = {raw: raw};
+    }
+
+    if (!response.ok) {
+      const apiMessage =
+        data && data.error
+          ? (typeof data.error === "string"
+              ? data.error
+              : JSON.stringify(data.error))
+          : raw.slice(0, 1200);
+
+      log("HTTP ERROR BODY: " + String(apiMessage).slice(0, 2500), "error");
+
+      const err = new Error(
+        "Сервер вернул HTTP " + response.status +
+        (apiMessage ? "\n" + String(apiMessage).slice(0, 1000) : "")
+      );
+
+      err.status = response.status;
+      err.data = data;
+      throw err;
+    }
+
+    log("Ответ получен: " + raw.length + " символов", "success");
+
+    return data;
+
+  } catch (error) {
+    if (error && error.status) throw error;
+
+    const details = errorDetails(error, path, method);
+
+    log(
+      "ПОДРОБНОСТИ СЕТЕВОЙ ОШИБКИ:\n" +
+      JSON.stringify(details, null, 2),
+      "error"
+    );
+
+    if (error && error.name === "AbortError") {
+      throw new Error("Запрос прерван или превышен тайм-аут 45 секунд.");
+    }
+
+    throw new Error(
+      "Не удалось получить доступный HTTP-ответ.\n" +
+      "Тип: " + details.name + "\n" +
+      "Сообщение: " + details.message + "\n" +
+      "Интернет браузера: " + details.online + "\n" +
+      "Адрес: " + details.endpoint + "\n\n" +
+      "Открой раздел «Диагностика» и посмотри журнал."
+    );
+
+  } finally {
+    clearTimeout(timeout);
+    if (abortController === controller) abortController = null;
+  }
+}
+
+/* ======================================================
+   MODEL LOADING
+   ====================================================== */
+
+async function loadModels() {
+  setStatus("Загрузка списка моделей...", "wait");
+  $("loadModelsBtn").disabled = true;
+  $("refreshModelsBtn").disabled = true;
+  $("catalogLoadBtn").disabled = true;
+
+  try {
+    const data = await request("/models", "GET");
+
+    if (!data || !Array.isArray(data.data)) {
+      throw new Error("Ответ API не содержит ожидаемый список data[].");
+    }
+
+    models = data.data
+      .filter(m => m && typeof m.id === "string")
+      .sort((a,b) => a.id.localeCompare(b.id));
+
+    renderModelSelect();
+    renderModelCatalog();
+
+    $("modelCount").textContent = models.length + " моделей";
+    setStatus("Модели загружены: " + models.length, "ok");
+
+    log("Загружено моделей: " + models.length, "success");
+    updateStats();
+
+    if (!models.length) {
+      showSystem("API вернул пустой список моделей.");
+    }
+
+  } catch (error) {
+    setStatus("Не удалось загрузить модели", "bad");
+    log("Ошибка загрузки моделей: " + error.message, "error");
+    alert("Ошибка загрузки моделей:\n\n" + error.message);
+
+  } finally {
+    $("loadModelsBtn").disabled = false;
+    $("refreshModelsBtn").disabled = false;
+    $("catalogLoadBtn").disabled = false;
+  }
+}
+
+function renderModelSelect() {
+  const select = $("modelSelect");
+  const previous = select.value;
+
+  select.replaceChildren();
+
+  if (!models.length) {
+    const option = document.createElement("option");
+    option.value = "";
+    option.textContent = "Модели не загружены";
+    select.appendChild(option);
+    return;
+  }
+
+  models.forEach(model => {
+    const option = document.createElement("option");
+    option.value = model.id;
+    option.textContent = model.id;
+    select.appendChild(option);
+  });
+
+  if (models.some(m => m.id === previous)) {
+    select.value = previous;
+  } else {
+    const preferred = models.find(m =>
+      /llama|qwen|deepseek/i.test(m.id)
+    );
+
+    if (preferred) select.value = preferred.id;
+  }
+}
+
+function renderModelCatalog() {
+  const target = $("modelList");
+  const query = $("modelSearch").value.trim().toLowerCase();
+
+  target.replaceChildren();
+
+  const filtered = models.filter(m =>
+    m.id.toLowerCase().includes(query)
+  );
+
+  if (!filtered.length) {
+    const p = document.createElement("div");
+    p.className = "note";
+    p.textContent = models.length
+      ? "По этому запросу ничего не найдено."
+      : "Нажми «Загрузить каталог».";
+    target.appendChild(p);
+    return;
+  }
+
+  const count = document.createElement("div");
+  count.className = "note";
+  count.textContent = "Показано: " + filtered.length;
+  target.appendChild(count);
+
+  filtered.forEach(model => {
+    const card = document.createElement("div");
+    card.className = "panel";
+    card.style.marginTop = "8px";
+    card.style.marginBottom = "8px";
+    card.style.padding = "10px";
+
+    const title = document.createElement("div");
+    title.textContent = model.id;
+    title.style.fontSize = "13px";
+    title.style.fontWeight = "800";
+    title.style.overflowWrap = "anywhere";
+
+    const meta = document.createElement("div");
+    meta.className = "note";
+    meta.textContent =
+      "Тип: " + (model.object || "model") +
+      (model.created ? " · Created: " + model.created : "");
+
+    const button = document.createElement("button");
+    button.className = "btn btn-small btn-green";
+    button.textContent = "Выбрать";
+    button.style.marginTop = "8px";
+
+    button.addEventListener("click", () => {
+      $("modelSelect").value = model.id;
+      document.querySelector('[data-page="chatPage"]').click();
+      log("Выбрана модель: " + model.id);
+    });
+
+    card.append(title, meta, button);
+    target.appendChild(card);
+  });
+}
+
+/* ======================================================
+   API CHECK
+   ====================================================== */
+
+async function testAPI() {
+  try {
+    await loadModels();
+  } catch (_) {
+    // loadModels уже выводит ошибку
+  }
+}
+
+/* ======================================================
+   CHAT
+   ====================================================== */
+
+function setBusy(value) {
+  busy = value;
+  $("sendBtn").disabled = value;
+  $("testBtn").disabled = value;
+  $("loadModelsBtn").disabled = value;
+  $("refreshModelsBtn").disabled = value;
+  $("catalogLoadBtn").disabled = value;
+  $("sendBtn").textContent = value ? "…" : "➤";
+}
+
+async function sendMessage() {
+  if (busy) return;
+
+  const text = $("messageInput").value.trim();
+  if (!text) return;
+
+  let model = $("modelSelect").value;
+
+  if (!model) {
+    alert("Сначала загрузи список моделей и выбери модель.");
+    return;
+  }
+
+  try {
+    validateKey();
+  } catch (error) {
+    alert(error.message);
+    return;
+  }
+
+  $("messageInput").value = "";
+  addMessage("user", text);
+
+  const assistant = addMessage("assistant", "Думаю...");
+  const assistantBody = assistant.body;
+
+  setBusy(true);
+  setStatus("Ожидание ответа модели...", "wait");
+
+  const temperature = Number($("temperature").value);
+  const maxTokens = Number($("maxTokens").value);
+
+  /*
+    Отправляем только историю чата.
+    Системное сообщение не добавляется автоматически.
+  */
+  const history = messages
+    .filter(m => m.role === "user" || m.role === "assistant")
+    .slice(0, -1)
+    .concat([{role:"user", content:text}]);
+
+  const payload = {
+    model: model,
+    messages: history,
+    temperature: temperature,
+    max_tokens: maxTokens,
+    stream: false
+  };
+
+  try {
+    requestCount++;
+    updateStats();
+
+    log("Модель: " + model);
+    log("Подготовлено сообщений: " + history.length);
+
+    const data = await request("/chat/completions", "POST", payload);
+
+    let answer = "";
+
+    if (data && Array.isArray(data.choices) && data.choices[0]) {
+      const choice = data.choices[0];
+      const content = choice.message && choice.message.content;
+
+      if (typeof content === "string") {
+        answer = content;
+      } else if (Array.isArray(content)) {
+        answer = content.map(part =>
+          typeof part === "string"
+            ? part
+            : (part.text || JSON.stringify(part))
+        ).join("");
+      }
+
+      if (!answer && choice.text) answer = choice.text;
+    }
+
+    if (!answer) {
+      answer = "Модель вернула ответ без текста.\n\n" +
+        JSON.stringify(data, null, 2).slice(0, 4000);
+    }
+
+    assistantBody.textContent = answer;
+
+    const index = messages.length - 1;
+    if (messages[index] && messages[index].role === "assistant") {
+      messages[index].content = answer;
+    }
+
+    setStatus("Ответ получен", "ok");
+    log("Ответ модели получен успешно.", "success");
+
+  } catch (error) {
+    const explanation = "Ошибка запроса:\n" + error.message;
+
+    assistantBody.textContent = explanation;
+
+    const index = messages.length - 1;
+    if (messages[index] && messages[index].role === "assistant") {
+      messages[index].content = explanation;
+    }
+
+    setStatus("Ошибка запроса", "bad");
+    log(explanation, "error");
+
+  } finally {
+    setBusy(false);
+    updateStats();
+  }
+}
+
+/* ======================================================
+   DIAGNOSTICS
+   ====================================================== */
+
+async function runDiagnostics() {
+  setNetworkStatus();
+
+  log("=== НАЧАЛО ДИАГНОСТИКИ ===");
+  log("navigator.onLine: " + navigator.onLine);
+  log("User-Agent: " + navigator.userAgent);
+  log("Страница: " + location.href);
+  log("Secure context: " + window.isSecureContext);
+  log("API endpoint: " + API_BASE);
+
+  if (!getKey()) {
+    log("API Key не введён. HTTP-проверка не выполнялась.", "error");
+    alert("Введи API-ключ во вкладке «Чат», затем повтори диагностику.");
+    return;
+  }
+
+  log("Проверяем GET /models...");
+
+  try {
+    const data = await request("/models", "GET");
+    log(
+      "GET /models: успешно. Количество моделей: " +
+      (data.data ? data.data.length : "неизвестно"),
+      "success"
+    );
+  } catch (error) {
+    log("GET /models завершился ошибкой: " + error.message, "error");
+  }
+
+  log("=== ДИАГНОСТИКА ЗАВЕРШЕНА ===");
+  log("POST отдельно можно проверить отправкой обычного сообщения в чате.");
+}
+
+/* ======================================================
+   EXPORT
+   ====================================================== */
+
+function downloadFile(name, content, type="text/plain;charset=utf-8") {
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+function exportChat() {
+  if (!messages.length) {
+    alert("Переписка пустая.");
+    return;
+  }
+
+  const text = messages.map(m =>
+    (m.role === "user" ? "ТЫ" : "NVIDIA AI") + "\n" + m.content
+  ).join("\n\n--------------------\n\n");
+
+  downloadFile(
+    "nvidia-ai-chat-" + Date.now() + ".txt",
+    text
+  );
+
+  log("Экспорт переписки выполнен.", "success");
+}
+
+function exportLog() {
+  const text = $("logBox").innerText || "Журнал пуст.";
+  downloadFile("nvidia-ai-diagnostics-" + Date.now() + ".txt", text);
+}
+
+async function copyLog() {
+  const text = $("logBox").innerText || "";
+
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("Журнал скопирован.");
+  } catch (_) {
+    const area = document.createElement("textarea");
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) {}
+
+    area.remove();
+
+    alert(ok
+      ? "Журнал скопирован."
+      : "Не удалось скопировать. Используй экспорт журнала.");
+  }
+}
+
+/* ======================================================
+   EVENTS
+   ====================================================== */
+
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t =>
+      t.classList.remove("active")
+    );
+
+    document.querySelectorAll(".page").forEach(p =>
+      p.classList.remove("active")
+    );
+
+    tab.classList.add("active");
+    $(tab.dataset.page).classList.add("active");
+  });
+});
+
+$("testBtn").addEventListener("click", testAPI);
+$("loadModelsBtn").addEventListener("click", loadModels);
+$("refreshModelsBtn").addEventListener("click", loadModels);
+$("catalogLoadBtn").addEventListener("click", loadModels);
+
+$("sendBtn").addEventListener("click", sendMessage);
+
+$("messageInput").addEventListener("keydown", event => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendMessage();
+  }
+});
+
+$("temperature").addEventListener("input", () => {
+  $("tempValue").textContent = $("temperature").value;
+});
+
+$("clearBtn").addEventListener("click", clearChat);
+$("exportBtn").addEventListener("click", exportChat);
+$("diagBtn").addEventListener("click", runDiagnostics);
+$("copyLogBtn").addEventListener("click", copyLog);
+$("clearLogBtn").addEventListener("click", () => {
+  $("logBox").textContent = "Журнал пуст.";
+  log("Журнал очищен.");
+});
+$("exportLogBtn").addEventListener("click", exportLog);
+
+$("modelSearch").addEventListener("input", renderModelCatalog);
+
+$("clearSearchBtn").addEventListener("click", () => {
+  $("modelSearch").value = "";
+  renderModelCatalog();
+});
+
+window.addEventListener("online", () => {
+  setNetworkStatus();
+  log("Браузер сообщил о восстановлении соединения.", "success");
+});
+
+window.addEventListener("offline", () => {
+  setNetworkStatus();
+  log("Браузер сообщил об отсутствии сети.", "error");
+});
+
+window.addEventListener("error", event => {
+  log("JavaScript error: " + event.message, "error");
+});
+
+window.addEventListener("unhandledrejection", event => {
+  log("Unhandled promise rejection: " + String(event.reason), "error");
+});
+
+$("deviceInfo").textContent =
+  "User-Agent: " + navigator.userAgent + "\n\n" +
+  "Online: " + navigator.onLine + "\n" +
+  "Secure context: " + window.isSecureContext + "\n" +
+  "Platform: " + (navigator.platform || "unknown") + "\n" +
+  "Language: " + navigator.language + "\n" +
+  "API: " + API_BASE;
+
+setNetworkStatus();
+updateStats();
+log("NVIDIA AI LAB 3.1 запущена.", "success");
+log("API-ключ не сохраняется в localStorage.");
+</script>
+</body>
+</html>
